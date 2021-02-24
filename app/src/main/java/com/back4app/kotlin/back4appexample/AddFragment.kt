@@ -6,7 +6,7 @@ import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -16,7 +16,7 @@ import java.util.*
 
 
 class AddFragment : Fragment() {
-    val dataViewModel:DataViewModel by viewModels {DataViewModelFactory()}
+    var dataViewModel:DataViewModel? = null
 
     private var itemName: EditText? = null
     private var itemAdd: EditText? = null
@@ -30,12 +30,15 @@ class AddFragment : Fragment() {
 
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         activity?.setTitle("Add")
-        (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(true);
         setHasOptionsMenu(true)
-        
+        dataViewModel = ViewModelProvider(requireActivity()).get(DataViewModel::class.java)
+        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_add, container, false)
     }
 
@@ -59,8 +62,8 @@ class AddFragment : Fragment() {
                 // Create calendar object and set the date to be that returned from selection
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
                 calendar.time = Date(it)
-                /*picker_button?.text = "${calendar.get(Calendar.DAY_OF_MONTH)}- " +
-                        "${calendar.get(Calendar.MONTH) + 1}-${calendar.get(Calendar.YEAR)}"*/
+                picker_button?.text = "${calendar.get(Calendar.DAY_OF_MONTH)}- " +
+                        "${calendar.get(Calendar.MONTH) + 1}-${calendar.get(Calendar.YEAR)}"
                 formatterDate =  convertStringToData(calendar.get(Calendar.DAY_OF_MONTH).toString() + "/" + (calendar.get(Calendar.MONTH) + 1) + "/" + calendar.get(Calendar.YEAR))
                 picker_button?.text= formatterDate.toString()
             }
@@ -122,15 +125,14 @@ class AddFragment : Fragment() {
     }
 
     private fun saveObject() {
-        val data= Data(null, itemName!!.text.toString(), itemAdd!!.text.toString(), formatterDate!!, isAvailable!!.isChecked)
-        dataViewModel.insert(data)
+        val data: Data = Data(null, itemName!!.text.toString(), itemAdd!!.text.toString(), formatterDate!!, isAvailable!!.isChecked)
+        dataViewModel?.insert(data)
         (activity as ListActivity).navHost.navController.navigate(R.id.action_addFragment_to_listFragment)
     }
 
     fun convertStringToData(getDate: String?): Date? {
         var today: Date? = null
         val simpleDate = SimpleDateFormat("dd/MM/yyyy")
-        //val simpleDate=DateFormat.getDateInstance(DateFormat.YEAR_MONTH_DAY)
         try {
             today = simpleDate.parse(getDate!!)
         } catch (e: ParseException) {
